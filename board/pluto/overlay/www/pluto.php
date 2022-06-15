@@ -1,21 +1,13 @@
   <?php
   session_start();
+
   ?>
   <?php
   if ( isset( $_POST[ 'savefw' ] ) ) {
-    exec( '/root/writeconfig_to_env.sh' );
+    exec( 'cp /www/settings.txt /mnt/jffs2/etc/settings.txt' ); //To be replaced by a ajax cmd
   }
   ?>
-  <?php
-  if ( isset( $_POST[ 'reboot' ] ) ) {
-    exec( '/sbin/reboot' );
-  }
-  ?>
-  <?php
-  if ( isset( $_POST[ 'delpatch' ] ) ) {
-    exec( 'rm  /mnt/jffs2/patch.zip' );
-  }
-  ?>
+  
   <!doctype html>
   <html>
   <head>
@@ -48,18 +40,29 @@
 
       .default {background-color: #e7e7e7; color: black;} /* Gray */
       .default:hover {background: #ddd;}
+
+      .h265box-manual {display: none;}
     </style>
 
     <title>ADALM-PLUTO DVB Controller</title>
     <meta name="description" content="ADALM-PLUTO DVB Controller ">
+    <meta http-equiv="Cache-Control" content="no-cache" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <link type="text/css" href="./img/style.css" rel="stylesheet">
     <script src="lib/jquery-3.5.1.min.js"></script>
-    <script src="lib/socket.io-2.3.0.min.js"></script>
     <script src="lib/u16Websocket.js"></script>
     <script src="lib/js.cookie.min.js"></script>
     <script src="lib/tooltip.js"></script>
+    <script src="lib/obs-websocket.js"></script>
+    <script src="obs.js.php"></script>
+    <script src="lib/mqttws31.js"></script>      
+    <script src="lib/mqtt.js.php?page=<?php echo basename($_SERVER["SCRIPT_FILENAME"]); ?>"></script>        
     <link type="text/css" href="./lib/tooltip.css" rel="stylesheet">
-    <link href="lib/favicon.ico" rel="icon" type="image/x-icon" />
+    <link type="text/css" href="./lib/menu.css" rel="stylesheet">
+    <link href="img/favicon-32x32.png" rel="icon" type="image/png" />
+
+
   </head>
 
   <body onload="load()">
@@ -69,56 +72,14 @@
       <li data-action="unlock">🔓 Unlock modulator</li>
       <li data-action="duplicate">➕ Duplicate this modulator</li>
       <li data-action="copydata">📋 <span  class="note tooltip" style="color: #333;" title="Copies the callsign, program name and power from the active modulator to all unlocked modulators">Copy Callsign, Program Name, Power</span></li>
+      <li data-action="export">📤 Export tabs to a backup file</li>
+      <li data-action="import"><div id="file">📥 Import tabs from a backup file</div><input type="file" name="file_import" id="file_import" accept=".pluto" onchange='showFile(event)'></input></li>       
    </ul>
-
-
-    <header id="top">
-      <div id="col1">
-        &nbsp;
-      </div>
-      <div id='col3'>   
-      <div class="anchor">
-        Firmware version : <?php
-        $fwver = shell_exec ( 'cat /www/fwversion.txt' );
-        echo "$fwver";
-        ?><br/> 
-        <a href="https://twitter.com/F5OEOEvariste/" title="Go to Tweeter">F5OEO: <img style="width: 32px;" src="./img/tw.png" alt="Twitter Logo"></a>
-      </div>
-    </div>
-    
-    <div id="col2">
-    <nav style="text-align: center;">
-      <a class="button" href="analysis.php" >Analysis</a> 
-
-      <a class="button" href="index.html" >Documentation</a>
-      <a class="button" href="https://wiki.batc.org.uk/QO-100_WB_Bandplan" target="_blank">QO-100 WB Bandplan</a>
-    </nav>
-  </div>
-  </header>
+   <?php include ('lib/menu_header.php'); ?>
 
 
     <header id="maintitle"> <h1><strong>ADALM-PLUTO</strong> DATV Controller</h1>
-      <section style=" text-align: right;">
-        <div >Thanks Rob M0DTS for help. Mods by G4EML for codec selection and sound enable</div>
-        
 
-
-                <div >Mods by Chris <a href="https://www.f5uii.net/?o=2110
-" title="Go to Chris blog and ressources" target="_blank">F5UII.net</a>&nbsp; <a href="https://twitter.com/f5uii/" title="Go to f5uii profile on twitter"><img style="width: 20px;" src="./img/tw.png" alt="Twitter Logo"></a> version <i id='patch-uii'>UII2.3</i><div id="note">A new UII patch is available<span id = 'uii-new-version'></span>. Follow <a href= "https://www.f5uii.net/en/patch-plutodvb/?ori=update" target="_blank">this link</a>.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <a id="close">❌</a></div>: <span class="note tooltip" title="
-        <strong>Version UII2.3 - 22/11/2020</strong><ul><li>Multiple modulator memory (tabbed system) <i>big program evolution</i>🤯</li><li>Transmission time counter with totalizer of the switchover and duration</li><li>Internal temperatures of the PlutoSDR (Suggested by <a href='https://www.f5uii.net/en/patch-plutodvb/#div-comment-18162' target='_blank'> Greg SV2RR</a>)</li><li>Focus on null packets on the <a href='analysis.php'>analysis page</a>, with some formatting</li><li>Github commits history on <a href='index.html#releasenote'>Documentation page</a> </li></ul>
-        <strong>Version UII2.2 - 18/10/2020</strong><ul><li>Copy to clipboard the RTMP URL string (<i>Detailed on Help tab</i>)</li></ul>
-        <strong>Version UII2.1c - 15/10/2020</strong><ul><li>Saving parameters (Spectrum & Minitiouner Receiver control panel)</li><li>Minitiouner steering, Gateway address</li></ul>
-        <strong>Version UII2 - 29/08/2020</strong> <ul><li>Minitiouner Receiver control by clicking on a channel of the spectrum with its setup fields and Help tab, Retractable spectrum</li></ul><strong>Version UII1 - 23/08/2020</strong> <ul><li>BATC spectrum (only if client is online) with transmit frequency choose by click on a channel</li><li>Reboot command, Delete patch, html format compliance mods...</li></ul> <hr>🛈 Link to <a href='https://www.f5uii.net/en/patch-plutodvb/?o=2110
-' target='_blank'>download, roadmap and support page">
-
-
-
-
-        </a>Details</span></div>
-        <div >Mods by Roberto IS0GRB (Save SpectrumView button state,Show how much patch.zip inserted (August 29th, 2020)</div>
-        <br>
-      </section>
-    </div>
   </header>
 
 
@@ -127,16 +88,15 @@
     <div class="tab-wrap">
 
       <input type="radio" id="tab1" name="tabGroup1" class="tab" checked>
-      <label for="tab1">QO-100 Spectrum</label>
+      <label for="tab1"><span class="note tooltip" title="To display the reception spectrum, you must have it enabled in the <a href='setup.php#linkreceiversettings'>Setup</a>. When disabled, the data flow is interrupted. At the same time, the receiver control feature is switched off. <p>The QO-100 spectrum is an online ressource of BATC / AMSAT-UK, we thank them for this service.</p>💡 Click on the tab to temporarily hide the spectrum. Another click on the banner will make the spectrum reappear.">Reception spectrum</span></label>
 
       <input type="radio" id="tab2" name="tabGroup1" class="tab">
-      <label for="tab2">Setup</label>
+      <!-- <label for="tab2">Setup</label> -->
 
-      <input type="radio" id="tab3" name="tabGroup1" class="tab">
-      <label for="tab3">Help</label>
 
-      <div class="tab__content" id="tab_spectrum">
-        <div id="no_wf"><p style="padding :10px 25px;">To display the QO-100 spectrum, enable the display on the Setup tab.</p></div>
+
+      <div class="tab__content" id="tab_spectrum" style = "visibility :display;">
+        <div id="no_wf"><p style="padding :10px 25px;">To display the QO-100 spectrum, enable the display in the <a href="setup.php#linkreceiversettings">Receiving settings</a>.</p></div>
         <div id="wf" style="width: 100%;">
           <div id="fft-col" class="col-xl-7"  style="width: 100%;">
             <canvas id="c" width="1" height="1"></canvas>
@@ -151,7 +111,7 @@
         </div>
       </div>
     </div>
-
+    <!--
     <div class="tab__content" id="tab_setup">
       <h3>Display</h3>
       <p>The QO-100 spectrum is an online ressource of BATC / AMSAT-UK. You can disable the display of the spectrum QO-100 here. When disabled, the data flow is interrupted. At the same time, the receiver control feature is switched off. Save your choice by Apply Settings button. </p>
@@ -169,84 +129,8 @@
             </tr>
           </table>
 
-          <h3>Receiver setup</h3>
-          <p>To be able to control your minitiouner, please fill in these few parameters. For more details, please refer to the Help tab.</p>
+      </div> -->
 
-          <table>
-            <tr>
-              <td>Destination IP address</td>
-              <td><input type="text" name="minitiouner-ip" value="232.0.0.11"></td>
-              <td>Destination Port number <br></td>
-              <td><input type="text" name="minitiouner-port" value="6789" maxlength="15" size="16"> </td>
-            </tr>
-            <tr>
-              <td>LNB Offset <i>kHz</i></td>
-              <td><input type="text" name="minitiouner-offset" value="9750000"></td>
-              <td>Rx socket <br></td>
-              <td><select name="minitiouner-socket" >
-                <option value="A">A</option>
-                <option value="B">B</option>
-              </select> </td>
-            </tr>
-            <tr>
-              <td>LNB Voltage <i>V</i></td>
-              <td>
-                <select name="minitiouner-voltage" >
-                  <option value="0">0</option>
-                  <option value="13">13</option>
-                  <option value="18">18</option>
-                </select>
-              </td>
-              <td>LNB 22 kHz <br></td>
-              <td><select name="minitiouner-22khz">
-                <option value="OFF">Off</option>
-                <option value="ON">On</option>
-              </select> </td>
-            </tr>  
-            <tr>
-              <td>DVB Mode <i></i></td>
-              <td>
-                <select name="minitiouner-mode" >
-                  <option value="Auto">Auto</option>
-                  <option value="DVB-S">DVBS</option>
-                  <option value="DVB-S2">DVBS2</option>
-                </select>
-              </td>
-              <td>LAN Gateway address<br></td>
-              <td><input type="text" name="gateway-eth0" value="192.168.1.1" maxlength="15" size="16">
-              </td>
-            </tr>       
-            <tr>
-              <td>UDP Broadcast IP address</td>
-              <td><input type="text" name="minitiouner-udp-ip" value="230.0.0.10"></td>
-              <td>UDP Broadcast Port number <br></td>
-              <td><input type="text" name="minitiouner-udp-port" value="10000" maxlength="15" size="16"> </td>
-            </tr>                 
-          </table><br>
-          <input type="submit" value="Apply Settings" id ="submit_receiver"><span id="saved_receiver" class="saved"  style="display: none;"> Saved !</span>
-        </form>
-
-      </div>
-
-      <div class="tab__content" id='tab_help'>
-
-       <h2>Control your transmission frequency and paste the RTMP URL string</h2>
-       <p>At the bottom of QO-100 Spectrum, there are horizontal bars representing the possible transmission channels on the satellite. By simply clicking on a bar, <ul><li>you will report  the corresponding transmission frequency in the Modulator table, in <i>Freq</i> field. This will take account of your possible transverter settings.</li><li>the chosen channel frequency is copied in your clipboard so that you can easily paste where you want.</li><li>then, by clicking on the text <i>Click here to copy RTMP server URL in </i>📋, you will directly copy in clipboard the whole string that is waiting in the destination URL. You will be able to simply paste it in URL field of your stream software like OBS Studio, or Vmix (the <a href="index.html#test" >RTMP string</a> is set with all parameters set in Modulator table, to be paste).</li></ul> </p>
-       <h2>Steering DATV receiver</h2>
-       <p><i>At this stage, only one minitiouner receiver can be controlled. The Pluto must be connected on the same local network, through a gateway (router). </i></p>
-       <h3>About Minitiouner</h3><img src="./img/minitiouner.jpg" style="
-       float: right;"/>
-       <p>The Minitiouner hardware is designed for easy use with the software Minitiouner Pro conceived by F6DZP Jean-Pierre. The support and download are free and available on <a href="http://www.vivadatv.org/" target="_blank">vivadatv forum</a>.</p>
-       <h3>How it works</h3>
-       <p>To be able to directly drive your minitiouner by a simple click on a used channel of the QO-100 spectrum, you have to follow these few indications.</p>
-       <p>The Ip adress and port to enter in the <i>Setup</i> tab correspond to the informations <i>Conf_AddrUDP</i> and <i>Conf_Port</i> that you find in the minitiouner configuration file <i>minitiouneConfig.ini</i>.  The IP address can also be the address of the computer on which the minitiouner is running.
-        The gateway address indicated is that of your network router. Click <i>Apply Settings</i> for save your settings.</p>
-        <p>Click on a signal on the spectrum. The command is sent directly to the minitiouner with the right frequency and SR, also considering your settings stored on the setup tab.</p>
-        <h3>And now what else ?</h3>
-        <p>You may have good ideas for further development of this software. You can bring them on <a href="https://www.f5uii.net/en/patch-plutodvb/?o=<?php
-        echo "$fwver";
-        ?>" title="Go to Chris blog and ressources" target="_blank">my blog</a>. You can help me to continue the developments and projects around plutoSDR, by making a gift purchase of an item content published on the public wish list, or buy me a cofee. 😉 73 Chris F5UII</p>
-      </div>
 
     </div>
   </section>
@@ -254,10 +138,14 @@
   <section>
    <table>
     <tr>
-      <td>PTT
+      <td>PTT <i>(F10)</i><br>Apply mod. settings <i>(F9)</i>
         <td>
 
-          <button id="ptt" onClick="request_ptt();"></button>
+          <button id="ptt" onClick="request_ptt();"></button> <?php 
+          if ((isset ($general_ini[1]['OBS']['use_obs_steering'])) && ($general_ini[1]['OBS']['use_obs_steering']=='on')) { ?>
+          <button id="streamingOBS"><span id="buttonstreaming" class="note tooltip" title="Click for toggle OBS Studio streaming" style ="color:#fff">Start streaming</span></button>
+          <button id="recordingOBS"><span id="buttonrecording" class="note tooltip" title="Click for toggle OBS Studio recording" style ="color:#fff">Start recording</span></button> 
+          <?php } ?> 
         </td>
         <td>
           <p id="textptt" style="display:none"></p><span id="temps" class="tooltip" title="Tuner temperature - Zynq FGPA temperature"></span><span id="txduration" class="note tooltip" title="Total duration : 00:00:00">00:00:00</span>
@@ -270,12 +158,39 @@
   </section>
 
 
+<?php
+
+  
+  $max_power = 10;
+
+  if (($general_ini!=false) && (isset($datv_config['DATV']['hi_power_limit'])) && ($datv_config['DATV']['hi_power_limit'])!=null ) {
+    $max_power = $datv_config['DATV']['hi_power_limit'];
+  }
+
+  $min_power = -79;
+
+  if (($general_ini!=false) && (isset($datv_config['DATV']['lo_power_limit'])) && ($datv_config['DATV']['lo_power_limit'])!=null ) {
+    $min_power = $datv_config['DATV']['lo_power_limit'];
+  }
+
+  //ws fft source
+ if (($general_ini!=false) && (isset($datv_config['DATV_RECEIVER']['spectrum-source'])) && ($datv_config['DATV_RECEIVER']['spectrum-source'])!=null ) {
+
+   if ($datv_config['DATV_RECEIVER']['spectrum-source'] !==  "QO100-web" ) 
+  {  $ws_url_override = 'ws://'. shell_exec('echo -n $(ip -f inet -o addr show eth0 | cut -d\  -f 7 | cut -d/ -f 1)').':7681';  
+echo '<script>var ws_url_override="'.$ws_url_override.'"</script>';
+  }
+  
+    
+  } 
+
+?>
 
   <h2>Modulator</h2>
 
   <hr>
 
-<span id ="addtab"><a id='plussign'> ➕ </a><a><span  class="note tooltip" title="Click ➕ to add a new modulator profile.<ul><li>The new tab is initialized in the same state as the Main tab.</li><li> You can edit the name of the tab. <li>It is saved locally in your browser, as soon as you have changed <u>at least one</u> setting in the table. (No click on <i>Apply Settings</i> needed)</li><li>  To use the active modulator for the next transmission (or during an ongoing transmision), click <i>Apply settings</i> button.</li><li>With a right click on a form, you can <ul><li>lock the modulator so that no changes can be done before unlocking it again.</li><li>duplicate the current active modulator on a new tab</li><li>copies the callsign, program name and power from the active modulator to all unlocked profiles</li></li></ul> ">Add modulator</span></a></span>
+<span id ="addtab"><a id='plussign'> ➕ </a><a><span  class="note tooltip" title="Click ➕ to add a new modulator profile.<ul><li>The new tab is initialized in the same state as the Main tab.</li><li> You can edit the name of the tab. <li>It is saved locally in your browser, as soon as you have changed <u>at least one</u> setting in the table. (No click on <i>Apply Settings</i> needed)</li><li>  To use the active modulator for the next transmission (or during an ongoing transmision), click <i>Apply settings</i> button.</li><li>With a right click on a form, you can <ul><li>lock the modulator so that no changes can be done before unlocking it again.</li><li>duplicate the current active modulator on a new tab</li><li>copies the callsign, program name and power from the active modulator to all unlocked profiles</li><li>export and import backups of all tabs</li></ul> ">Add modulator</span></a></span>
   <ul id="tabs"  >
     <li><a id="tab1">Main</a></li>
   </ul>
@@ -288,20 +203,18 @@
         <table>
           <tr><td>Power <i>(0.1 dB steps)</i></td>
             <td><div class="slidecontainer">
-              <input type="range" min="-79" max="10" step="0.1" value="-10" class="slidernewpower" name="power" onchange="update_slider()" oninput="update_slidertxt()">
+              <input type="range" min="<?php echo $min_power; ?>" max="<?php echo $max_power; ?>" step="0.1" value="-10" class="slidernewpower" name="power" onchange="update_slider()" oninput="update_slidertxt()">
               <span id="powertext"></span>
+              <input type='hidden' id='power_abs' name='power_abs'>
+              <input type='hidden' id='power_abs_watt' name='power_abs_watt'>
             </div>
           </td>
         </tr>
       </table>
-
+<input type="hidden" name="callsign" value="<?php 
+          if (isset ($general_ini[1]['DATV']['callsign'])) { echo $general_ini[1]['DATV']['callsign']; } else { echo '<<undefined>>' ; } ?>"><input type="hidden" name="provname" value="<?php 
+          if (isset ($general_ini[1]['DATV']['provname'])) { echo $general_ini[1]['DATV']['provname']; } else { echo '<<undefined>>' ; } ?>" maxlength="15" size="16">
       <table>
-        <tr>
-          <td>Callsign<i>(DVB Program Name)</i></td>
-          <td><input type="text" name="callsign" value="NOCALL"></td>
-          <td>DVB Provider Name <br><i>(output: FwVer_ProvName)</i></td>
-          <td><input type="text" name="provname" value="_yrname/project_" maxlength="15" size="16"> (max 15 chrs)</td>
-        </tr>
         <tr><td>PCR/PTS</td>
           <td><div class="slidecontainer">
             <input type="range" min="100" max="2000" value="800" class="slider" name="pcrpts" oninput="update_slider_pts()">
@@ -310,15 +223,23 @@
         </td>
         <td>PAT period</td>
         <td><div class="slidecontainer">
-          <input type="range" min="100" max="1000" value="200" class="slider" name="patperiod" oninput="update_slider_pat()">
-          <span id="pattext"></span>
+          <input type="range" min="100" max="1000" value="200" class="slider" name="patperiod" oninput="update_slider_pat()"> <span id="pattext"></span>
         </div>
       </td>
 
     </tr>
     <tr>
-      <td>Freq-Manual <i>(70 MHz - 6 GHz)</i></td>
-      <td><input type="text" name="freq" value="0">
+      <td>Freq-Manual <i>(70 MHz - 6 GHz)</i><br/>Fine tune <i>(+/- 150 kHz)</i></td>
+      <td><input type="text" id="freq" name="freq" value="0" style="margin-bottom: 5px;" oninput="manualfreqchange();"> <button  type="button" style="
+    margin-left: 10px;
+    height: 24px;
+    width: 24px;
+    padding-left: 7px;
+    padding-top: 4px;
+    color: white;
+" onclick="tunefreqzero();">∅</button>
+        <input type="range" min="-150" max="150" value="0" class="slider" name="finefreqtune" oninput="update_slider_finefreqtune(); "> <span id="finefreqtunetext"> 0 kHz</span> 
+        <input type="hidden" id="f-central" name="f-central" value="">
       </td>
       <td>Freq-Channel <br><i>(SR channel Uplink / Downlink)</i></td>
       <td><select name="channel" onchange="upd_freq();calc_ts()">
@@ -473,6 +394,7 @@
     <td><select name="mode" onchange="upd_mod()" >
       <option value="DVBS2">DVBS2</option>
       <option value="DVBS">DVBS</option>
+      <option value="DVBT">DVBT</option>
     </select></td>
     <td>Mod</td>
     <td><select name="mod" onchange="upd_fec()" >
@@ -507,6 +429,8 @@
       <option value="34">3/4</option>
       <option value="56">5/6</option>
       <option value="78">7/8</option>
+      <option value="89">8/9</option>
+      <option value="910">9/10</option>
     </select></td>
   </tr>
   <tr id="pilots_option"  >
@@ -527,6 +451,7 @@
       <option value="0.35">0.35</option>
       <option value="0.25">0.25</option>
       <option value="0.20">0.20</option>
+      <option value="0.15">0.15</option>
     </select></td>
 
     <td>Transverter LO <i>(MHz)</i></td>
@@ -572,31 +497,136 @@
 <input type="submit" value="Apply Settings" id="apply_modulator"><span id="saved_modulator" class="saved"  style="display: none;"> Saved !</span>
 </form>
 <br><br>
+<?php  
+// check if setup file is present, and if it is check if H265Box parameter is enabled
+if (($general_ini==false) || (isset($datv_config['H265BOX']['use_h265box'])&& $datv_config['H265BOX']['use_h265box']=='on')) {
+
+?>
+
 <h2>H264/H265 box control (option)</h2>
 <hr>
 <form id="h264h265" method="post" action = "javascript:save_modulator_setup();">
 <table>
-  <tr> <td>IP (192.168.1.120 default)</td> <td> <input type="text" name="h265box" value="192.168.1.120"></td> </tr>
+  <?php // if setup file is present, the H265Box IP address is to take from there 
+
+  if (($general_ini!=false) && (isset($datv_config['H265BOX']['ipaddr_h265box']))) {
+  ?>
+   <input type="hidden" name="h265box" value="<?php echo $datv_config['H265BOX']['ipaddr_h265box']; ?>">
+  <?php  } else {
+  ?>
+    <tr> <td>IP (192.168.1.120 default)</td> <td> <input type="text" name="h265box" value="192.168.1.120"></td> </tr>
+  <?php    
+  }
+  ?>
   <tr> <td>Codec</td> <td><select name="codec"> <option value= "H264">H264</option> <option value= "H265">H265</option> </select> </td> </tr>
   <tr> <td>Sound</td> <td> <select name="sound"> <option value="On">On</option> <option value="Off">Off</option> </select> </td> </tr>
   <tr> <td>Audio Input</td> <td> <select name="audioinput"> <option value="line">Line</option> <option value="HDMI">HDMI</option> </select> </td> </tr>
+  <tr>
+    <td><span class="note tooltip" style="color: #636363;" title="In manual mode, all the changes in this section are sent directly to the decoder without having to apply them via the <i>Apply Settings</i> button. It is therefore advisable to set its default setting with the transmission switched off and to save these settings by <i>Apply Settings</i> button. You will find these manual settings set as default. <br/>They can be applied new values even when your transmission is running. <br/> Each time the modulator is changed, the maximum of the adjustable CBR is adapted. An appropriate CBR value is also initialised.">Manual control</span></td>
+    <td>
+      <div class="checkcontainer">
+        <input type="checkbox" id="h265box-manualmode" name="h265box-manualmode"  onchange="upd_h265box()">
+        <label for="h265box-manualmode" aria-describedby="label"><span class="ui"></span> manual</label>
+      </div>
+    </td>
+
+  </tr>
+    <tr class="h265box-manual">
+
+    <td>Definition</td>
+    <td>
+      <!-- https://en.wikipedia.org/wiki/List_of_common_resolutions  -->
+      <select name="res">
+        <option value='480x234'>480 × 234 [16∶9]</option>
+        <option value='480x272'>480 × 272 [16∶9]</option>
+        <option value='640x360'>640 × 360 [16∶9]</option>
+        <option value='848x480'>848 × 480 [16∶9]</option>
+        <option value='854x480'>854 × 480 [16∶9]</option>
+        <option value='960x540'>960 × 540 [16∶9]</option>
+        <option value='960x544'>960 × 544 [16∶9]</option>
+        <option selected="selected" value='1024x576'>1024 × 576 [16∶9]</option>
+        <option value='1024x600'>1024 × 600 [16∶9]</option>
+        <option value='1136x640'>1136 × 640 [16∶9]</option>
+        <option value='1138x640'>1138 × 640 [16∶9]</option>
+        <option value='1280x720'>1280 × 720 [16∶9]</option>
+        <option value='1334x750'>1334 × 750 [16∶9]</option>
+        <option value='1366x768'>1366 × 768 [16∶9]</option>
+        <option value='1600x900'>1600 × 900 [16∶9]</option>
+        <option value='1776x1000'>1776 × 1000 [16∶9]</option>
+        <option value='1920x1080'>1920 × 1080 [16∶9]</option>
+        <option value='768x480'>768 × 480 [8∶5]</option>
+        <option value='1024x640'>1024 × 640 [8∶5]</option>
+        <option value='1152x720'>1152 × 720 [8∶5]</option>
+        <option value='1280x800'>1280 × 800 [8∶5]</option>
+        <option value='1440x900'>1440 × 900 [8∶5]</option>
+        <option value='1680x1050'>1680 × 1050 [8∶5]</option>
+        <option value='256x192'>256 × 192 [4∶3]</option>
+        <option value='320x240'>320 × 240 [4∶3]</option>
+        <option value='384x288'>384 × 288 [4∶3]</option>
+        <option value='400x300'>400 × 300 [4∶3]</option>
+        <option value='512x384'>512 × 384 [4∶3]</option>
+        <option value='640x480'>640 × 480 [4∶3]</option>
+        <option value='800x600'>800 × 600 [4∶3]</option>
+        <option value='832x624'>832 × 624 [4∶3]</option>
+        <option value='960x720'>960 × 720 [4∶3]</option>
+        <option value='1024x768'>1024 × 768 [4∶3]</option>
+        <option value='1152x864'>1152 × 864 [4∶3]</option>
+        <option value='1280x960'>1280 × 960 [4∶3]</option>
+        <option value='1400x1050'>1400 × 1050 [4∶3]</option>
+        <option value='1440x1080'>1440 × 1080 [4∶3]</option>
+        <option value='240x160'>240 × 160 [3∶2]</option>
+        <option value='480x320'>480 × 320 [3∶2]</option>
+        <option value='960x640'>960 × 640 [3∶2]</option>      
+        <option value='1152x768'>1152 × 768 [3∶2]</option>
+        <option value='1440x960'>1440 × 960 [3∶2]</option>
+      </select>
+    </td>
+    <td> <span class="note tooltip" style="color: #636363;" title="For fine adjustment, click on the slider and then use the up and down keys<br/>For an adjustment in steps of 10% of the full scale, click on the slider and then use the page up and page down keys.">Constant bitrate</span>
+    </td>
+    <td >
+      <input type="range" min="64" max="12000" step="1" value="150" class="h265box-cbr" name="v_bitrate" onchange="update_slide('v_bitrate',' kb/s','')" oninput="update_slide('v_bitrate',' kb/s','')">
+       <span id="v_bitrate-value"></span>
+    </td>
+   
+  </tr>
+  <tr class="h265box-manual" >
+    <td>GOP <i>Group of pictures</i>
+    </td>
+    <td><input type="range" min="5" max="200" step="1" value="100" class="h265box-gop" name="keyint" onchange="update_slide('keyint',' key interval','')" oninput="update_slide('keyint',' key interval','')"><br/>
+       <span id="keyint-value"></span>
+    </td>
+    <td>Framerate
+    </td>
+    <td><input type="range" min="1" max="30" step="1" value="25" class="h265box-framerate" name="fps" onchange="update_slide('fps',' fps','')" oninput="update_slide('fps',' fps','')"> <span id="fps-value"></span>
+    </td>    
+  </tr>
+  <tr class="h265box-manual">
+    <td>Audio channel</td>
+    <td><select name="audio_channels" id="audio_channels" value="2">
+                  <option value="2">Stereo</option>
+                  <option value="1">Mono</option>
+      </select></td>
+    <td>Audio Quality</td>
+    <td>
+        <select name="audio_bitrate" id="audio_bitrate" value="32000" onchange="update_h265box_cbr()">
+                  <option value="32000">32K</option>
+                  <option value="48000">48K</option>
+                  <option value="64000">64K</option>
+                  <option value="128000">128K</option>
+      </select>
+    </td> 
+  </tr>  
+
 </table><br>
 <input type="submit" value="Apply Settings"><span id="saved_h264h265" class="saved" style="display: none;"> Saved !</span>
-<br><br>
-<h2>Advanced (Remux)</h2>
-<hr>
-<tr id="remux">
-  <td>Force compliant (H265box)</td>
-  <td><select name="remux">
-    <option selected value="1">on</option>
-    <option value="0">off</option>
-  </select></td>
-</tr>
-<input type="submit" value="Apply Settings"><span id="saved_h265compliant" class="saved"  style="display: none;"> Saved !</span>
-</form>
-<td><br><b>Warning : <i>Select ON if you have trouble receiving with continuous blocks</b></i></td>
 
-<br><br>
+</form>
+
+
+<?php
+} //end H265box filtering
+?>
+<br>
 <h2>Save for next reboot</h2>
 <hr>
 Warning : In order to write permanently, you need first to apply setting then Save to flash. <br>
@@ -605,89 +635,46 @@ Warning : In order to write permanently, you need first to apply setting then Sa
     <button name="savefw">Save to flash</button>
   </p>
 </form>
-
 <br>
-
-<h2>Upload a new firmware or new patch</h2>
-<hr>
-
-<?php
-if ( isset( $_SESSION[ 'message' ] ) && $_SESSION[ 'message' ] ) {
-  printf( '<b>%s</b>', $_SESSION[ 'message' ] );
-  unset( $_SESSION[ 'message' ] );
-}
-?>
-<form method="POST" action="upload.php" enctype="multipart/form-data">
-  <div> <span>Upload a File (pluto.frm or patch.zip):</span>&nbsp;
-    <input type="file" name="uploadedFile" />
-  </div><br>
-  <input type="submit" name="uploadBtn" value="Upload" />
-</form>
-<br><br>
-<h2>Delete patch</h2>
-<div class="xterm">
-  <?php 
-  $patchchk = shell_exec ( 'ls -la /mnt/jffs2 | grep -c patch.zip' ); 
-  echo "<b>$patchchk</b> &nbsp; Loaded<br/>"; 
-  if($patchchk)
-  {
-    $listzip = shell_exec ( 'unzip -l /mnt/jffs2/patch.zip' );
-    $separator = "\r\n";
-    $line = strtok($listzip, $separator);
-
-    while ($line !== false) {
-      echo $line;
-      echo "<br>";
-      $line = strtok( $separator );
-    }
-  }
-  ?>
-</div>
-<hr>
-This will restore to the last firmware state, removing the patches added in overlay.
-<br>After erasing the files, you will have to reboot manually or with below reboot button to resume with the basic firmware. <br>
-<form method="post">
-  <p>
-    <button name="delpatch">Delete Patch</button>
-  </p>
-</form>
-<br>
-
-<h2>Reboot</h2>
-<hr>
-Can be usefull. <br>
-<form method="post">
-  <p>
-    <button name="reboot">Reboot the Pluto</button>
-  </p>
-</form>
-<a class="anchor" href="#top">Back to top</a>
 
 <script>
   function spectrum_display () {
-    if ($( "#spectrum_enable" ).is(":checked")==true) {
+    <?php $display="false"; if ((isset($datv_config['DATV_RECEIVER']['spectrum_enable']))&& $datv_config['DATV_RECEIVER']['spectrum_enable']==='on') {$display="true";} ?>
+    if (<?php echo $display ?>==true) {
       $("#wf").show(0);
       $("#no_wf").hide(0);
+      jQuery.getScript("lib/wf.js");
     } else { 
       $("#wf").hide(0);
       $("#no_wf").show(0);
     }
-    jQuery.getScript("lib/wf.js");
+    
   }
 
-  $( "#spectrum_enable" ).click(function() {
-    spectrum_display ();
-
-  });
-
+//global variables
 var tab='1';
 var t = '#tab1C ';
+var obs_ws_connected = false;
+
+
 
   function save_modulator_setup (){     
     let n = '';
     if (tab!=1) {
       n=tab;
     } 
+
+    localStorage.setItem('LastTabApplied',tab ); //to be placed in success part
+    if ($('#textptt').text()=='ON AIR') {
+      $('a').removeClass('blink-tabactivated');
+
+
+      localStorage.setItem('ActivTab_TX',tab );
+      $('div .activ-tab').removeClass('activ-tab');
+      $('a#tab'+tab).addClass('blink-tabactivated');
+      $(t).addClass('activ-tab');
+    }
+
     $.ajax({
         url: 'modulator_save.php', // url where to submit the request
         type : "POST", // type of action POST || GET
@@ -696,9 +683,12 @@ var t = '#tab1C ';
         data : $("#modulator"+n+", #h264h265").serialize(), // post data || get data
         success : function(result) {
           $(".saved").fadeIn(250).fadeOut(1500);
+
+          return true;
         },
         error: function(xhr, resp, text) {
           console.log(xhr, resp, text);
+          return false;
         }
       })
 
@@ -795,6 +785,15 @@ var t = '#tab1C ';
         $('#txduration').attr('title','Total duration : '+hms(total)+'<br>Transmission switchover : '+sw+'<br><span style="font: Arial; font-size:8px">Cumulates only if the controller page is open (foreground or background)<span><br><button id="counterreset" onclick="reset_counter()">Reset</button>').tooltipster({ delay: 100,maxWidth: 500,speed: 300,interactive: true,animation: 'grow',trigger: 'hover',position : 'bottom-left'})
 
   }
+
+  function change_tabinput_status() {
+
+      if ((localStorage.getItem('ActivTab_TX')!=null) && (localStorage.getItem('ActivTab_TX')!=tab)) { 
+      $(t+'.form_modulator :input').prop("disabled", true); //disable input if a other tab in transmission
+    } else {
+      $(t+'.form_modulator :input').prop("disabled", false);
+    }
+  }
   function request_onair()
   {
     var status = $('#textptt').text();
@@ -810,8 +809,23 @@ var t = '#tab1C ';
           console.log('On  air status');
           document.getElementById("ptt").innerHTML = 'Switch OFF';
           document.getElementById("textptt").innerHTML  = '<font color="#ff0000">ON AIR</font>';
+          if (localStorage.getItem('ActivTab_TX')) {
+            $('div .activ-tab').removeClass('activ-tab');
+            $('a#tab'+localStorage.getItem('ActivTab_TX')).addClass('blink-tabactivated');
+            $('#tab'+localStorage.getItem('ActivTab_TX')+'C').addClass('activ-tab');
+          }
 
           if (status=="STANDBY") {
+            if (localStorage.getItem('LastTabApplied')) {
+             localStorage.setItem('ActivTab_TX',localStorage.getItem('LastTabApplied') );
+            }
+            $('div .activ-tab').removeClass('activ-tab');
+            $('a#tab'+localStorage.getItem('ActivTab_TX')).addClass('blink-tabactivated');
+            $('#tab'+localStorage.getItem('ActivTab_TX')+'C').addClass('activ-tab');
+            change_tabinput_status();
+
+
+            
             //start count duration
              localStorage.setItem('txon_at',Date.now() );
              if (localStorage.getItem('total_switchover')==null) {
@@ -830,6 +844,11 @@ var t = '#tab1C ';
           document.getElementById("textptt").innerHTML  = '<font color="#33b3ca">STANDBY</font>';
 
           if (status=="ON AIR") {
+            $('a').removeClass('blink-tabactivated');
+             $('#tab'+localStorage.getItem('ActivTab_TX')+'C').removeClass('activ-tab');
+            localStorage.removeItem('ActivTab_TX');
+            change_tabinput_status();
+            
             //memorise total duration
             if  (localStorage.getItem('total_duration')==null) {
               localStorage.setItem('total_duration', parseInt((Date.now()-localStorage.getItem('txon_at'))/1000,10));
@@ -852,6 +871,7 @@ var t = '#tab1C ';
 
 
   function request_ptt(){
+
     var xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function() {
       if (this.readyState == 4 && this.status == 200) {
@@ -865,36 +885,74 @@ var t = '#tab1C ';
       {
         console.log('PTTON');
         xmlhttp.open("GET", "requests.php?PTT=on", true);
+         if (mqtt.isConnected()) {
+          sendmqtt('plutodvb/var', '{"ptt":"true"}' ) ;
+          sendmqtt('plutodvb/subvar/ptt', 'true' ) ;
+         }
+
       }
       else
       {
         console.log('PTTOFF');
         xmlhttp.open("GET", "requests.php?PTT=off", true);
+        if (mqtt.isConnected()) {
+          sendmqtt('plutodvb/var', '{"ptt":"false"}' ) ;
+          sendmqtt('plutodvb/subvar/ptt', 'false' ) ;
+        }
       }
       xmlhttp.send();
     }
 
+function tunefreqzero()
+{
+  $(t+' input[name ="finefreqtune"]').val(0).change();update_slider_finefreqtune();
+}
 
-    function request_gain_change(level){
-      var xmlhttp = new XMLHttpRequest();
-      xmlhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          //document.getElementsByName("power")[0].value = this.responseText;
-        }
-      };
-      xmlhttp.open("GET", "requests.php?gain=" + level, true);
-      xmlhttp.send();
-    }
+function update_slide(id,text, tab) {
+ 
+  $(tab +' #'+id+'-value').text($(tab+'input[name ="'+id+'"]').val()+text)  ;
+
+}
 
 function update_slidertxt()
 {
- $(t+'#powertext').text($(t+'input[name ="power"]').val()+'dB')  ;
+<?php 
+  if (($general_ini!=false) && (isset($datv_config['DATV']['abs_gain'])) &&($datv_config['DATV']['abs_gain']!='' )) {
+    echo "abs_gain=".$datv_config['DATV']['abs_gain'].";";
+  }
+  else
+  {
+    echo "abs_gain=0;";
+  }
+?>
+ if (abs_gain!=0) {
+  abs= (parseFloat($(t+'input[name ="power"]').val())+parseFloat(abs_gain));
+  watt = Math.pow(10,(abs/10))/1000;
+  if (watt<1.000) {
+    text_watt = (Math.pow(10,(abs/10))).toFixed(1)+'mW'
+  }
+  else
+  {
+    text_watt = (Math.pow(10,(abs/10))/1000).toFixed(1)+'W'
+  }
+  $(t+'#powertext').text(parseFloat($(t+'input[name ="power"]').val()).toFixed(1)+'dB (Abs: '+abs.toFixed(1)+'dBm / '+text_watt+')' ) ;
+  $(t+'#power_abs').val(abs.toFixed(1)).change();
+  $(t+'#power_abs_watt').val(watt.toFixed(5)).change();;
+ }
+ else {
+  $(t+'#powertext').text(parseFloat($(t+'input[name ="power"]').val()).toFixed(1)+'dB')  ;
+  $(t+'#power_abs').val('').change();;
+  $(t+'#power_abs_watt').val('').change();;
+ }
+
+
+
 }
 
 function update_slider()
 {
   update_slidertxt();
-  request_gain_change( $(t+'input[name ="power"]').val());
+
 }
 
 function update_slider_pts()
@@ -908,30 +966,42 @@ function update_slider_pat()
  $(t+'#pattext').html($(t+'input[name ="patperiod"]').val()+'ms')  ;
 }
 
+function update_slider_finefreqtune()
+{
+  
+$(t+'#finefreqtunetext').html($(t+'input[name ="finefreqtune"]').val()+'kHz')  ;
+ nfreq= parseFloat(parseFloat($(t+'input[name ="freq"]').val())+$(t+'input[name ="finefreqtune"]').val()*0.001);
+// console.log('nfreq='+nfreq);
+
+ $(t+'input[name ="freq"]').val((parseFloat($(t+'input[name ="f-central"]').val())+parseFloat($(t+'input[name ="finefreqtune"]').val()*0.001)).toFixed(3)).change();
+}
+
 function upd_freq() {
 if ($(t+'select[name ="channel"]').val()=='Custom') {
-  $(t+'input[name ="freq"]').val(0);
-  $(t+'input[name ="sr"]').val(0);
+  $(t+'input[name ="freq"]').val(0).change();
+  $(t+'input[name ="f-central"]').val(0).change();
+  $(t+'input[name ="sr"]').val(0).change();
   $(t+'select[name ="srselect"]').val('Custom');
 } 
 else {
-  $(t+'input[name ="freq"]').val(parseFloat($(t+'select[name ="channel"]').val().split("-")[0])-$(t+'input[name ="trvlo"]').val())
+  $(t+'input[name ="freq"]').val((parseFloat($(t+'select[name ="channel"]').val().split("-")[0])-parseFloat($(t+'input[name ="trvlo"]').val())+parseFloat($(t+'input[name ="finefreqtune"]').val()/1000)).toFixed(3)).change();
+  $(t+'input[name ="f-central"]').val((parseFloat($(t+'select[name ="channel"]').val().split("-")[0])-parseFloat($(t+'input[name ="trvlo"]').val())).toFixed(3)).change()
 
     var chan_array = $(t+'select[name ="channel"] option:selected').text().match(/[a-z]+|[^a-z]+/gi);;
     var sr=0;
     if(chan_array[1]=="KS"){
       sr=chan_array[0];
     }
-    $(t+'input[name ="sr"]').val(sr);
-    $(t+'select[name ="srselect"]').val(sr);
+    $(t+'input[name ="sr"]').val(sr).change();
+    $(t+'select[name ="srselect"]').val(sr).change();
   }
 
 }
 function upd_trvlo() {
 if ($(t+'select[name ="trvloselect"]').val()=='Custom') {
-  $(t+'input[name ="trvlo"]').val(0);
+  $(t+'input[name ="trvlo"]').val(0).change();
 } else {
-  $(t+'input[name ="trvlo"]').val($(t+'select[name ="trvloselect"]').val());     
+  $(t+'input[name ="trvlo"]').val($(t+'select[name ="trvloselect"]').val()).change();     
 }
 }
 
@@ -939,10 +1009,10 @@ if ($(t+'select[name ="trvloselect"]').val()=='Custom') {
 function upd_sr() {
 
   if ($(t+'select[name ="srselect"]').val()=='Custom') {
-  $(t+'input[name ="sr"]').val(0);
+  $(t+'input[name ="sr"]').val(0).change();
 } 
 else {
-  $(t+'input[name ="sr"]').val($(t+'select[name ="srselect"]').val());  
+  $(t+'input[name ="sr"]').val($(t+'select[name ="srselect"]').val()).change();  
 }
 }
 
@@ -987,6 +1057,36 @@ function calc_ts(){
   else{
     $(t+'#tsrate').html(($(t+'input[name ="sr"]').val()*2*(188.0/204.0)*($(t+'select[name ="fec"]').val().substring(0, 1)/$(t+'select[name ="fec"]').val().substring(1, 2))).toFixed(3));
   }
+  update_h265box_cbr();
+}
+
+function update_h265box_cbr() {
+    if ($('#h265box-manualmode').is(':checked')==true) //H265BOX in manual mode - intialise the CBR on change modultaor
+     {
+        total_ts = parseFloat($(t+'#tsrate').html());
+        $('input[name="v_bitrate"]').attr('max',total_ts); //CBR max for H265box
+        //Iniate CBR value like F4HSL has it written in strategy.sh
+        factor = 0.85;
+        if (total_ts < 1200 ) {
+          factor = 0.8;
+        }
+        if  (total_ts < 400 ) {
+          factor = 0.75;
+        }
+        if  (total_ts < 250 ) {
+          factor = 0.7;
+        }
+        if  (total_ts < 200 ) {
+          factor = 0.65;
+        }
+        cbr = (total_ts)*factor-10-$('#audio_bitrate').val()/1000;
+        if (total_ts<100) {
+          cbr = 64;
+        }
+        $('input[name="v_bitrate"]').val(cbr);
+        update_slide('v_bitrate',' kb/s','');
+      }
+  
 }
 
 function get_usable_data_bits(){
@@ -1067,10 +1167,18 @@ function get_usable_data_bits(){
   return kbch;
 }
 
+function upd_h265box() {
+  if ($( "#h265box-manualmode" ).is(":checked")== true ) {
+      $('.h265box-manual').show();
+  } else {
+     $('.h265box-manual').hide();
+  }
+}
+
 function upd_mod() {
   var DVBS2_MOD = ["QPSK","8PSK","16APSK","32APSK"];
 
-  if($(t+'select[name ="mode"]').val()=="DVBS"){
+  if(($(t+'select[name ="mode"]').val()=="DVBS")||($(t+'select[name ="mode"]').val()=="DVBT")){
       $(t+'select[name ="mod"]').find('option').remove().end().append('<option value="QPSK">QPSK</option>');
       $(t+'#pilots_option').hide();
       $(t+'#frame_option').hide();
@@ -1107,7 +1215,7 @@ function upd_fec() {
   var DVBS2_16APSK = ["2/3","3/4","4/5","5/6","8/9","9/10"];
   var DVBS2_32APSK = ["3/4","4/5","5/6","8/9","9/10"];
 
-  if($(t+'select[name ="mode"]').val()=="DVBS"){
+  if(($(t+'select[name ="mode"]').val()=="DVBS")||($(t+'select[name ="mode"]').val()=="DVBT")){
     //DVBS
     fec_list(DVBS);
 
@@ -1131,56 +1239,47 @@ function upd_fec() {
 calc_ts();
 }
 var max= 0;
-function get_config_receiver() {
-
- $.get('settings-receiver.txt', function(data) {
-  var datalines = (data.split('\n'));
-  for (var i in datalines) {        
-    var datal =(datalines[i].split(' '));
-    var $el = $('[name="'+datal[0]+'"]');
-    type = $el.attr('type');
-
-    switch(type){
-      case 'checkbox':
-      $el.attr('checked', 'checked');
-      break;
-      case 'radio':
-      $el.filter('[value="'+datal[1]+'"]').attr('checked',  'checked');
-      break;
-      case 'option':
-        //$('select[name="minitiouner-22khz"]').find('option:contains("On")').attr("selected",true);
-        $el.removeAttr("selected");
-        $el.filter('[value="'+datal[1]+'"]').find('option:contains("'+datal[0]+'")').attr('selected', true);
-        break;                    
-        default:
-        $el.val(datal[1]);
-      }
-    }
-    spectrum_display(); 
-
-  })
- .fail(function() {
-  if (max<4) {
-    $.get('copy-config-jffs2www.php', function() {});
-    get_config_receiver() ;
-    max++;
-  }
- }) 
-}
-
 
 function update_tab(id) {
       
+      var check_if_freqcenter = false;
       var data = localStorage.getItem('modulator_'+id);
       if (data !== null ) {
         var datalines = (data.split('&'));
         for (var i in datalines) {        
           var datal =(decodeURIComponent(datalines[i]).split('='));
           var $el = $('#tab'+id+'C [name="'+datal[0]+'"]');
-          $el.val(datal[1]);
+          //if (datal[0]!='callsign') { //Change callsign source to setup
+            if (datal[0] == 'callsign') {
+              if ($('#tab'+id+'C [name="callsign"]').val() == '<<undefined>>') {//if callsign is empty (from setup), set the existing local storage callsign
+              $el.val(datal[1]);
+              }
+            } else
+            if (datal[0] == 'provname') {
+              if ($('#tab'+id+'C [name="provname"]').val() == '<<undefined>>') {//if callsign is empty (from setup), set the existing local storage callsign
+              $el.val(datal[1]);
+              }
+            } else 
+
+            if ((datal[0] == 'mod')  || (datal[0] == 'mode')) {
+
+            $el.val(datal[1]).change(); //so that the update list is lauched on change
+
+          } else {
+             $el.val(datal[1]);
+          }
+          if (datal[0]=='f-central') {
+            check_if_freqcenter = true;
+          }
 
         }
       }
+
+      //processing the addition of finetune (conversion of existing values)
+      if (check_if_freqcenter == false) {
+        $('#tab'+id+'C [name="f-central"]').val($('#tab'+id+'C [name="freq"]').val());
+      }
+
       if (localStorage.getItem('tablocked_'+id)=='true') {
         $('#tab'+id+'C :input').prop("disabled", true);
       } else {
@@ -1188,10 +1287,37 @@ function update_tab(id) {
       }
 
      //upd_mod();
-     upd_fec();
+     
      update_slidertxt()
      update_slider_pat();
      update_slider_pts();
+     update_slider_finefreqtune();
+      update_slide('keyint',' key interval','');
+      update_slide('fps',' fps','');
+      update_slide('v_bitrate',' kb/s','');
+
+      //send mqtt all form value via mqtt
+      $('#tab'+id+'C .form_modulator input, #tab'+id+'C .form_modulator textarea, #tab'+id+'C .form_modulator select').each( function(index) {  
+
+        let val;
+        if ($(this).is(':checkbox')) {
+          val= $(this).is(':checked');
+        } else {
+          val=$(this).val();
+        }
+        let obj = $(this).attr('id');
+        if (obj == undefined) {
+          obj = $(this).attr('name');
+        } 
+        //console.log(obj + ' ='+val);
+        if (mqtt.isConnected() ) {
+          if (( $('#id-tabs-content').children().hasClass('activ-tab')==false) || (( $('#id-tabs-content').children().hasClass('activ-tab')==true ) && ($(t).hasClass('activ-tab') == true )))  { //Send MQTT only of activ tab during transmission 
+            sendmqtt('plutodvb/var', '{"'+obj+'":"'+ val +'"}' ) ;
+            sendmqtt('plutodvb/subvar/'+obj, val ) ;
+          }
+        }
+      });
+
 }
 
 var max_id_modulator =1;
@@ -1222,7 +1348,44 @@ function get_local_modulator() {
   }
 }
 
+$('#h264h265').on('change', function () {
 
+
+if ($( "#h265box-manualmode" ).is(":checked")== true ) {
+
+    $.ajax({
+        url: 'encoder_control.php', // url where to submit the request
+        type : "POST", // type of action POST || GET
+        dataType : 'html', // data type
+        processData: false,
+        //data : $(".h265box-manual").find("select, input").serialize(), // post data || get data
+        data :  $("#h264h265").find("select, input").serialize(),
+        success : function(result) {
+         // $(".saved").fadeIn(250).fadeOut(1500);
+          return true;
+        },
+        error: function(xhr, resp, text) {
+          console.log(xhr, resp, text);
+          return false;
+        }
+      })
+  }
+
+});
+
+
+
+
+$("#freq").on("change ", function() {
+
+
+});
+
+function manualfreqchange (){
+  
+   $(t+'#f-central').val($(t+'#freq').val()).change();
+  //$(t+'input [name="f-central"]').attr('value', parseFloat($(t+'#freq').val())).change();
+}
 
 function get_config_modulator(only_part) {
 
@@ -1230,21 +1393,59 @@ function get_config_modulator(only_part) {
   var datalines = (data.split('\n'));
   for (var i in datalines) {        
     var datal =(datalines[i].split(' '));
+    var $el = $('[name="'+datal[0]+'"]');
+    type = $el.attr('type');
 
-     if (['h265box','codec','sound','audioinput','remux'].indexOf(datal[0]) >=0) {
-        var $el = $('[name="'+datal[0]+'"]');
-        $el.val(datal[1]);
+     if (['h265box','codec','sound','audioinput','h265box-manualmode','res','v_bitrate','keyint','fps','audio_channels','audio_bitrate','v_bitrate'].indexOf(datal[0]) >=0) {
+
+      switch(type){
+        case 'checkbox':
+        $el.attr('checked', 'checked'); upd_h265box();
+        break;
+        case 'radio':
+        $el.filter('[value="'+datal[1]+'"]').attr('checked',  'checked');
+        break;
+        case 'option':
+          //$('select[name="minitiouner-22khz"]').find('option:contains("On")').attr("selected",true);
+          $el.removeAttr("selected");
+          $el.filter('[value="'+datal[1]+'"]').find('option:contains("'+datal[0]+'")').attr('selected', true);
+          break;                    
+          default:
+          if ((datal[0]=='h265box') && (<?php if  (($general_ini!=false) && (isset($datv_config['H265BOX']['ipaddr_h265box']))) {echo 1;} else {echo 0;} ?>==1)) {
+            $el.val('<?php echo $datv_config['H265BOX']['ipaddr_h265box']; ?>')
+          } else {
+          $el.val(datal[1]);
+          }
+        }
     }
      if (only_part !== true) {
-       if (['h265box','codec','sound','audioinput','remux'].indexOf(datal[0]) <0) {
+       if (['h265box','codec','sound','audioinput','h265box-manualmode','res','v_bitrate','keyint','fps','audio_channels','audio_bitrate','v_bitrate'].indexOf(datal[0]) <0) {
         var $el = $('#tab1C '+'[name="'+datal[0]+'"]');
+        type = $el.attr('type');
         }
-       $el.val(datal[1]);
+        switch(type){
+          case 'checkbox':
+          $el.attr('checked', 'checked'); upd_h265box();
+          break;
+          case 'radio':
+          $el.filter('[value="'+datal[1]+'"]').attr('checked',  'checked');
+          break;
+          case 'option':
+            //$('select[name="minitiouner-22khz"]').find('option:contains("On")').attr("selected",true);
+            $el.removeAttr("selected");
+            $el.filter('[value="'+datal[1]+'"]').find('option:contains("'+datal[0]+'")').attr('selected', true);
+            break;                    
+            default:
+            $el.val(datal[1]);
+          }
      if (datal[0] == 'mod')  {
         upd_mod();
       }
     }
   }
+  update_slide('v_bitrate',' kb/s','');
+  update_slide('keyint',' key interval','');
+  update_slide('fps',' fps','');
 })
  .fail(function() {
   console.log('modulator settings read failed. It may be normal if never saved Modulator section');
@@ -1254,13 +1455,14 @@ function get_config_modulator(only_part) {
    update_slider_pat();
    update_slider_pts();
    update_slider();
+   update_slider_finefreqtune();
    calc_ts();
  }) 
 
 }
 
 function load() {
-  get_config_receiver() ;
+  spectrum_display(); 
   if  (localStorage.getItem('modulator_1')==null) {
     get_config_modulator(false);
   }
@@ -1274,8 +1476,8 @@ if ((localStorage.getItem('ActivTab')!=null) && ($('#tabs #tab'+localStorage.get
 }
 transmission_tooltip();
 
-$('input[type=file]').change(function(e){
-  var filen = $('input[type=file]')[0].files[0].name;
+$('#file_firm').change(function(e){
+  var filen = $('#file_firm')[0].files[0].name;
   if ((filen!='patch.zip')&&(filen!='pluto.frm')){
     alert('The file "' + filen +  '" is incorrect. Only pluto.frm and patch.zip are allowed. File names must be in lower case'); }
   });
@@ -1314,6 +1516,9 @@ function reset_counter() {
        tab = $(this).attr('id').substring(3);
        update_tab(tab);
        localStorage.setItem('ActivTab',tab);
+
+      change_tabinput_status();
+
 
     if($(this).hasClass('inactive')){ 
       $('#tabs li a').addClass('inactive');           
@@ -1403,6 +1608,65 @@ function reset_counter() {
   }
  }
 
+ function download(filename, text) {
+  var element = document.createElement('a');
+  var universalBOM = "\uFEFF";
+  element.setAttribute('href', 'data:text/csv; charset=utf-8,' + encodeURIComponent(universalBOM+text));
+  element.setAttribute('download', filename);
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+}
+
+function export_tabs() {
+  var text = "";
+  for (var j = 0; j < localStorage.length; j++) {
+     text+=localStorage.key(j)+';'+localStorage.getItem(localStorage.key(j))+"\n";
+  }
+  download('backup.pluto',text)
+}
+
+var wrapper = $('<div/>').css({height:0,width:0,'overflow':'hidden'});
+var fileInput = $('#file_import').wrap(wrapper);
+
+$('#file').click(function(){
+    fileInput.click();
+}).show();
+
+
+ function readSingleFile(evt) {
+    var f = evt.target.files[0]; 
+    //console.log('type = '+f.name.split(".").pop() );
+    if (f.name.split(".").pop()=='pluto') {
+      if (f) {
+        var r = new FileReader();
+        r.onload = function(e) { 
+            var contents = e.target.result;
+            var lines = contents.split("\n"), output = [];
+            localStorage.clear();
+            for (var i=0; i<lines.length; i++){            
+              if (lines[i].split(";")[0] !='') {
+                localStorage.setItem(lines[i].split(";")[0],lines[i].split(";")[1])
+              }
+            }
+      }
+
+      r.readAsText(f);
+      location.reload();
+    }
+
+     else { 
+      alert("Failed to load file");
+    }
+  }   else {
+      alert("Failed import.\nOnly backup files with extension .pluto are expected.");
+      $('#file_import').val('');
+    }
+  }
+  document.getElementById('file_import').addEventListener('change', readSingleFile);
+
+
 
   $('#addtab').click(function (e) {
     e.preventDefault();
@@ -1410,6 +1674,25 @@ function reset_counter() {
     add_tab();
 
  });
+
+//F10 F9 ESC shortcuts for PTT toggle
+  $(document).keydown(function(evt){ 
+    
+      if (evt.keyCode==121){
+        evt.preventDefault();
+        request_ptt();
+    }
+      if (evt.keyCode==120){
+        evt.preventDefault();
+         save_modulator_setup();
+    }    
+      if (evt.keyCode==27){ 
+        evt.preventDefault();
+          $(".right-c-menu").hide(100);
+    }   
+
+});
+
 
   $("body").on("keydown", "[contenteditable='true'], [name='comment']", function (e) { 
   if(e.keyCode == 13) {   
@@ -1463,6 +1746,12 @@ $(".right-c-menu li").on('click', function(){
       break;
       case "copydata": 
         copy_data(tab);
+      break;    
+      case "export": 
+        export_tabs();
+      break;
+      case "import": 
+       // import_tab();
       break;      
   }
   // Hide after the action was triggered
@@ -1470,7 +1759,47 @@ $(".right-c-menu li").on('click', function(){
 });
 
 
+$('#tab1').click(function(){
+   $("#tab_spectrum").toggle("slow");
+})
+
+
+</script>
+<script>
+  $( document ).ready(function() {
+
+
+  MQTTconnect();
+
+    //MQTT send messages
+  $('body').on('change', 'input,select,textarea', function () {
+
+      obj= $(this).attr('id');
+      if (obj==undefined) {
+        obj=$(this).attr('name');
+      }
+      if ($(this).is(':checkbox')) {
+        val= $(this).is(':checked');
+      } else {
+        val=$(this).val();
+      }
+    if (mqtt.isConnected() ) {
+      if (( $('#id-tabs-content').children().hasClass('activ-tab')==false) || (( $('#id-tabs-content').children().hasClass('activ-tab')==true ) && ($(t).hasClass('activ-tab') == true )))  { //Send MQTT only of activ tab during transmission
+        sendmqtt('plutodvb/var', '{"'+obj+'":"'+ val +'"}' ) ;
+        sendmqtt('plutodvb/subvar/'+obj, val ) ;
+
+        // Send PTT current status for synchronizing with heard pltuodvb/tx = true/false
+      }
+    }
+  });
+
+
+
+
+
+
+
+});
 </script>
 </body>
 </html>
-

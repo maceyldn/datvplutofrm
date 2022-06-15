@@ -17,7 +17,7 @@ hr{
 h1, h3{
   font-family: "Arial Regular", sans-serif;
   font-weight: bold;
-  margin-bottom:0;
+  margin-bottom: 0.6em;
 }
 h1{
   font-size: 32px;
@@ -664,7 +664,7 @@ a {cursor:pointer;}
     padding-bottom: 0px; 
 
 
-    background: #FFF;
+    background-color: transparent;
     border-top-left-radius:3px; 
     border-top-right-radius:3px; 
 }
@@ -673,15 +673,38 @@ a {cursor:pointer;}
     display: inline-block;
 }
 
+
+  .blink-tabactivated{
+    color: #000;
+    font-weight: bold;
+    font-size: 2rem;
+    animation: blinkingText 2s infinite;
+  }
+  @keyframes blinkingText{
+    0%    { background-color: #FF033E; color : white;}
+    50%  { background-color: #a00028;color : white;}
+    100%  { background-color: #FF033E;color : white;}
+  }
+  .activ-tab {
+      
+      border-width: 10px !important;
+
+      border-color: red !important;
+      padding: 10px !important;
+      padding-top:20px;
+
+  }
+
 .container {
 
     clear:both;           
     /*width:100%; */
     border-left: solid 1px #CCC;
-      border-right: solid 1px #CCC;
-  border-bottom: solid 1px #CCC;
+    border-right: solid 1px #CCC;
+    border-bottom: solid 1px #CCC;
+    border-top: solid 1px #CCC;
     text-align:left;
-  padding : 20px;
+    padding : 20px;
 
 }
 
@@ -702,10 +725,17 @@ a {cursor:pointer;}
   float: left;
   width: 20%;
   padding-top: 20px;
+  text-align:   left;
+  vertical-align: middle;
+  align-items: center;
+  line-height: 40px;
+
 
 }
 #col2 {
   padding-top: 20px;
+  margin:auto;
+  flex: none;
 
 }
 #col3 {
@@ -714,8 +744,8 @@ a {cursor:pointer;}
   padding-top: 20px;
   text-align:   right;
   vertical-align: middle;
-  display: inline-block;
-  height: 100%;
+  align-items: center;
+  line-height: 40px;
 
 }
 /*right-click right-c-menu*/
@@ -731,6 +761,7 @@ a {cursor:pointer;}
     color: #333;
     border-radius: 5px;
     padding: 0;
+    box-shadow: 3px 6px 5px 0px rgb(57 63 72 / 30%);
 }
 
 /* Each of the items in the list */
@@ -745,4 +776,24 @@ a {cursor:pointer;}
 
 .right-c-menu li:hover {
     background-color: #33b3ca78;
+}
+
+
+#top {
+  display: flex;
+
+}
+
+.fixed 
+{  position: fixed;  top:0; left:0;  width: 100%; 
+   padding-bottom:20px;
+   background-color: white;
+   border-bottom: 1px solid #add8e6;
+   z-index:110;
+}
+
+.shadow {
+    -webkit-box-shadow: 0 3px 5px rgba(57, 63, 72, 0.3);
+  -moz-box-shadow: 0 3px 5px rgba(57, 63, 72, 0.3);
+  box-shadow: 0 3px 5px rgba(57, 63, 72, 0.3);
 }

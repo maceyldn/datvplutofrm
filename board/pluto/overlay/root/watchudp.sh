@@ -1,11 +1,6 @@
-# F5UII Gateway setup for routing through lan udp socket to minitiouner. Execute one time at pluto start
-GW_ETH0=$(grep "\bgateway-eth0\b" /www/settings-receiver.txt | cut -f2 -d' ')
-if expr "$GW_ETH0" : '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$' >/dev/null; then
-  echo "success"
-  route add default gw $GW_ETH0
-else
-  echo "not an IP v4 format for Gateway found in settings-receiver.txt"
-fi
+#!/bin/sh
+
+
 
 LastModify=$(date -r /www/settings.txt +%s)
 
@@ -22,6 +17,7 @@ else
 	kill -9 $pidffmpeg
 	killall -9 tsp
 	killall -9 pluto_dvb
+	killall -9 tsvbr2cbr
 fi
 sleep 1
 done

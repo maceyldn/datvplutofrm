@@ -1,4 +1,4 @@
-  if ( ((!window.navigator.onLine)||(document.getElementById("spectrum_enable").checked==false)) )
+  if (!window.navigator.onLine) 
   { 
    //no execution (exit)
   }
@@ -66,7 +66,7 @@ if(typeof(Storage) !== "undefined")
 
 /* On load */
 $(function() {
-  if ((!window.navigator.onLine)||(document.getElementById("spectrum_enable").checked==false)) 
+  if (!window.navigator.onLine) 
   { 
     return false;
   }
@@ -422,10 +422,18 @@ render_timer = setInterval(render_fft, render_interval);
 
 function align_symbolrate(width)
 {
-  
   if(width < 0.022)
   {
     return 0;
+  }
+
+  else if(width < 0.040)
+  {
+    return 0.025;
+  }
+    else if(width < 0.059)
+  {
+    return 0.033;
   }
   else if(width < 0.060)
   {
@@ -564,7 +572,7 @@ function detect_signals(fft_data)
         }
         /*
           ctx.lineWidth=1;
-          ctx.strokeStyle = 'white';
+          ctx.strokeStyle = 'red';
           ctx.beginPath();
           ctx.moveTo((start_signal/fft_data.length)*canvasWidth, canvasHeight * (1 - (signal_threshold/65536)));
           ctx.lineTo((end_signal/fft_data.length)*canvasWidth, canvasHeight * (1 - (signal_threshold/65536)));
@@ -575,7 +583,7 @@ function detect_signals(fft_data)
         strength_signal = acc / acc_i;
         /*
           ctx.lineWidth=1;
-          ctx.strokeStyle = 'white';
+          ctx.strokeStyle = 'yellow';
           ctx.beginPath();
           ctx.moveTo((start_signal/fft_data.length)*canvasWidth, canvasHeight * (1 - (strength_signal/65536)));
           ctx.lineTo((end_signal/fft_data.length)*canvasWidth, canvasHeight * (1 - (strength_signal/65536)));
@@ -590,7 +598,7 @@ function detect_signals(fft_data)
         }
         /*
           ctx.lineWidth=1;
-          ctx.strokeStyle = 'white';
+          ctx.strokeStyle = 'blue';
           ctx.beginPath();
           ctx.moveTo((start_signal/fft_data.length)*canvasWidth, canvasHeight * (1 - (strength_signal/65536)));
           ctx.lineTo((start_signal/fft_data.length)*canvasWidth, canvasHeight * (1 - (strength_signal/65536)) + 20);
@@ -605,7 +613,7 @@ function detect_signals(fft_data)
         }
         /*
           ctx.lineWidth=1;
-          ctx.strokeStyle = 'white';
+          ctx.strokeStyle = 'blue';
           ctx.beginPath();
           ctx.moveTo((end_signal/fft_data.length)*canvasWidth, canvasHeight * (1 - (strength_signal/65536)));
           ctx.lineTo((end_signal/fft_data.length)*canvasWidth, canvasHeight * (1 - (strength_signal/65536)) + 20);
@@ -826,16 +834,32 @@ if(mouse_y > (canvasHeight * 7/8))
         
        
         //$(t+'[name="freq"]').val($("#upf").val()- $(t+'[name="trvlo"]').val());
-        $(t+'[name="freq"]').val($("#upf").val()- $(t+'[name="trvlo"]').val());
-        console.log('tab wf = '+t + ' .upf='+$("#upf").val() + ' tvrlo='+$(t+'[name="trvlo"]').val());
+        $(t+'[name="freq"]').val((parseFloat($("#upf").val()- $(t+'[name="trvlo"]').val()+$(t+'input[name ="finefreqtune"]').val()/1000)).toFixed(3)).change();
+        $(t+'#f-central').val((parseFloat($("#upf").val()- $(t+'[name="trvlo"]').val())));
+        //console.log('tab wf = '+t + ' .upf='+$("#upf").val() + ' tvrlo='+$(t+'[name="trvlo"]').val());
         save_local_modulator();
         let textarea = document.getElementById("upf");
         textarea.select();
         let ret= document.execCommand('copy');
-        if (ret == true) {
+        if ((ret == true) && (obs_ws_connected==false)) {
           let ret=false;
           $('#message_spectrum').html('Frequency set and also copied in clipboard ! <span id="rtmp"><i>Click here to copy RTMP server URL in </i>📋<i>.</i></span>');
           $("#message_spectrum").fadeIn(250).delay(5000).fadeOut(1500);
+        } else {
+
+           let t='#tab'+tab+'C ';
+          //rtmp://192.168.2.1:7272/,437,DVBS2,QPSK,333,23,0,nocalib,800,32,
+          let m=window.location.origin+':7272/,' + $(t+"input[name='freq']").val() + ',' + $(t+"select[name='mode']").val()+ ',' + $(t+"select[name='mod']").val() + ',' + $(t+"input[name='sr']").val() + ',' + $(t+"select[name='fec']").val() + ',' + $(t+"input[name='power']").val() + ',nocalib,'+$(t+"input[name='pcrpts']").val() +',32,';
+          m = m.replace("http://", "rtmp://");
+
+          if (obs_ws_connected==true) {
+            if (typeof obsstreamurl === "function") { 
+              
+              obsstreamurl(m,$(t+"input[name='callsign']").val());
+              $('#message_spectrum').html('The URL and key strings have just been sent directly to OBS Studio (Parameters/Stream/Custom Server).<br/> <span style="font-family:verdana;  font-size: 12px; "> '+ m +'</span>');
+              $("#message_spectrum").fadeIn(250).delay(5000).fadeOut(1500);
+            }
+          }
         }
 
          $('#rtmp').click(function () {
@@ -852,6 +876,8 @@ if(mouse_y > (canvasHeight * 7/8))
             $('#message_spectrum').html('The URL string is in the clipboard and can by paste in your streaming software.<br/> <span style="font-family:verdana;  font-size: 12px; "> '+ m +'</span>');
                    
           }
+
+          
     
         });
 

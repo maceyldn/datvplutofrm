@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta http-equiv="Cache-Control" content="no-cache" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <title>ADALM-PLUTO On-board documentation</title>
 <meta name="description" content="ADALM-PLUTO On board docs">
 
@@ -21,34 +24,37 @@
 <!-- Add your site or application content here -->
 <header id="top">
 <div class="anchor">
-<a href="https://twitter.com/F5OEOEvariste/" title="Go to Tweeter">F5OEO: <img style="width: 32px;" src="./img/tw.png" alt="Twitter Logo"></a>
+
 </div>
 </header>
 
-<nav style="text-align: center;">
-	<a class="button" href="pluto.php">Controller</a>
-	<a class="button" href="analysis.php">Analysis</a>
-	<a class="button" href="https://www.paypal.me/f5oeo">Donate</a>	
+<nav style="text-align: center;" id="banner1">
+	<h2>Let's go to PlutoDVB</h2>
+	<a class="button" href="http://#IP#/setup.php"><b>Let's go to PlutoDVB</b> (on USB connection)</a>
+	<a class="button" href="http://#IPADDR_ETH#/setup.php"><b>Let's go to PlutoDVB</b> (on Ethernet connection)</a>
+	<p>select the button corresponding to the current method of connecting to Adalm Pluto</p>
+</nav>
+<nav style="text-align: center; display:none;" id="banner2">
+	<h2>Let's go to PlutoDVB</h2>
+	<a class="button" id="link" href="http://#IPADDR_ETH#/setup.php"><b>Let's go to PlutoDVB</b></a>
 </nav>
 <hr>
 <section>
-<h1>Welcome to the <strong>ADALM-PLUTO</strong> QO-100/DATV custom firmware</h1>
-<a href="http://www.analog.com/education"><img src="./img/prof_blue.png" alt="ADI Professor" style="float:left" /></a>
-<p style="margin-bottom:0em;">Thank you for testing this custom firmware. It is mainly intended to make an easy plateform for TX/RX on QO-100 satellite but could be used on other bands.It includes :</p>
-<ul style="margin-left:8em; margin-top:0em;"><li>DATV DVBS/S2 modulator (33KSymbols to 2MSymbols).</li>
-<li>Reduced bandwidth analog TV modulator using NASA Apollo mode (in development) <a href="https://github.com/fsphil/hacktv">HackTV</a></li>
-<li><a href="#ssb">Narrow band ssb</a></li>
-<li><a href="#sstv">Narrow band sstv</a></li>
-<li><a href="#freedv">FreeDV digital voice modulator Codec2</a> </li>
-<li><a href="#spectrum">Spectrum painting</a></li>
-<li>Reception will be added in future.</li></ul>
-<p>Warning : This is an experimental firmware maintained by an amator. Feel free to report bugs, but no warranty to fix them !</p>
+<h1>Welcome to <b>PlutoDVB</b>, ADALM-PLUTO QO-100/DATV custom firmware</h1>
+<img src='img/plutoDVB.svg' width="180px" style="float:right;margin : 10px;">
+<a href="http://www.analog.com/education"><img src="./img/prof_blue.png" alt="ADI Professor" style="float:left;margin : 15px;" /></a>
+<p style="margin-bottom:0em;">Thank you for testing this custom firmware. It is mainly intended to make an easy plateform for transmission and reception on QO-100 satellite but could be used on other bands. It includes :</p>
+<ul style="margin-left:8em; margin-top:1em;"><li>DATV DVBS/S2/DVBT modulator (25KSymbols to 2MSymbols).</li>
+	<li>Wideband Spectrum Receiver</li>
+	<li>Minitiouner, Longmynd demodulator receivers steering</li>
+	<li>OBS Studio steering</li>
+<p>Warning : This is an experimental firmware maintained by the amateur community.. Feel free to report bugs, but no warranty to fix them !</p>
 </section>
 <hr>
 <section id="started">
 <a class="anchor" href="#top">Back to top</a>
 <h3>Getting Started</h3>
-<p>Usefull information are available at <a href="https://wiki.batc.org.uk/Custom_DATV_Firmware_for_the_Pluto">BATC wiki</a> thanks to Paul M0EYT</p>
+<p>Usefull information are available at <a href="https://wiki.batc.org.uk/Custom_DATV_Firmware_for_the_Pluto">BATC wiki</a> thanks to Paul M0EYT, and also at Christian F5UII <a href="https://www.f5uii.net/en/transmit-datv-over-qo100-with-sdr-adalm-pluto-f5oeo-plutodvb/?o=plutodvb">  tutorials</a>.</p>
 <p>To install this firmware, use the pluto.frm provided and follow <a href="https://wiki.analog.com/university/tools/pluto/users/firmware">instructions to flash ot on the pluto board</a></p>
 <p id="test"><strong>DATV external requirements:</strong></p>
 <p>In order to send video to PlutoSDR, you need a video producer. It could be a PC, a phone or raspberry pi for example.</p>
@@ -83,6 +89,7 @@
 
 <p id="test"><strong>OBS</strong></p>
 <p><img src="img/obspluto.png" alt="obs" /></p>
+You can install OBS Studio websocket so that PlutoDVB will steer directly this parameters directly. Eanble this feature in PlutoDVB setup.
 <p id="test"><strong>VMIX</strong></p>
 <p><img src="img/vmixencoding_stream.JPG" alt="obs" /></p>
 <p id="test"><strong>Transport stream bitrate</strong></p>
@@ -110,96 +117,11 @@
 	<p><img src="img/h265box.jpg" alt="h265" /></p>
 	<p>PlutoSDR wait for transport stream over udp on port 8282.</p>
 	<p><img src="img/h265param.png" alt="h265" /></p>
+	
 	<p>You should have a transport stream bitrate which is calculated from DVB parameters. Parameters are set with <a href="pluto.php">Controller</a> </p>
 	</section>
 <hr>
-<section id="ssb">
-<a class="anchor" href="#top">Back to top</a>
-<h3>SSB modulation</h3>
-<p>Audio only is used from OBS/VMIX</p>
-<p id="test"><strong>Set streaming</strong></p>
-<p>Assume that pluto is directly connected to PC. Go to connection/new and type the URL. The parsing is very poor so, be very carefull with syntax, particularly "," which is used for parameter separator.</p>
-<ul style="margin-left:8em; margin-top:0em;">
-	<li>Frequency in Mhz: 437</li>
-	<li>Mode : SSB</li>
-	<li>Gain in dB (-71..0): 0</li>
-	<li>BF Gain (1..20): Adjust manualy BF gain</li>
-	<li>CALLSIGN </li>
-</ul>
-<p>You can copy/paste these fields</p>
-<p>Basic setup</p>
-<p>rtmp://192.168.2.1:7373/,437,SSB,-10,2,</p>
-<p>,F5OEO,</p>
-</section>
 
-<hr>
-<section id="sstv">
-<a class="anchor" href="#top">Back to top</a>
-<h3>SSTV modulation</h3>
-<p>Video only is used from OBS/VMIX</p>
-<p>Warning : as soon as Picture is starting Tx, there is no way to stop it until finished</p>
-<p id="test"><strong>Set streaming</strong></p>
-<p>Assume that pluto is directly connected to PC. Go to connection/new and type the URL. The parsing is very poor so, be very carefull with syntax, particularly "," which is used for parameter separator.</p>
-<ul style="margin-left:8em; margin-top:0em;">
-	<li>Frequency in Mhz: 437</li>
-	<li>Mode : SSTV</li>
-	<li>Gain in dB (-71..0): 0</li>
-	<li>BF Gain (0.1..20): Adjust manualy BF gain</li>
-	<li>Sstv mode: m1(Martin1),m2(Martin2),s1(Scotty1),s2(Scotty2)</li>
-	<li>CALLSIGN </li>
-</ul>
-<p>You can copy/paste these fields</p>
-<p>Basic setup</p>
-<p>rtmp://192.168.2.1:7373/,437,SSTV,-4,1,m1,</p>
-<p>,F5OEO,</p>
-</section>
-
-<hr>
-<section id="freedv">
-<a class="anchor" href="#top">Back to top</a>
-<h3>FreeDV modulation</h3>
-<p>Audio only is used from OBS/VMIX</p>
-<p id="test"><strong>Set streaming</strong></p>
-<p>Assume that pluto is directly connected to PC. Go to connection/new and type the URL. The parsing is very poor so, be very carefull with syntax, particularly "," which is used for parameter separator.</p>
-<ul style="margin-left:8em; margin-top:0em;">
-	<li>Frequency in Mhz: 437</li>
-	<li>Mode : FREEDV</li>
-	<li>Gain in dB (-71..0): 0</li>
-	<li>BF Gain (0.1..20): Adjust manualy BF gain</li>
-	<li>FreeDV mode {1600|700|700B|700C|700D|2400A|2400B|800XA}</li>
-	<li>CALLSIGN </li>
-</ul>
-<p>You can copy/paste these fields</p>
-<p>Basic setup</p>
-<p>rtmp://192.168.2.1:7373/,437,FREEDV,0,2,800XA,</p>
-<p>,F5OEO,</p>
-</section>
-
-<hr>
-<section id="spectrum">
-<a class="anchor" href="#top">Back to top</a>
-<h3>Spectrum painting</h3>
-<p>Video only is used from OBS/VMIX</p>
-<p>Warning : as soon as spectrum is starting Tx, there is no way to stop it until finished.</p>
-<p id="test"><strong>Set streaming</strong></p>
-<p>Assume that pluto is directly connected to PC. Go to connection/new and type the URL. The parsing is very poor so, be very carefull with syntax, particularly "," which is used for parameter separator.</p>
-<ul style="margin-left:8em; margin-top:0em;">
-	<li>Frequency in Mhz: 437</li>
-	<li>Mode : SPECTRUM</li>
-	<li>Gain in dB (-71..0): 0</li>
-	<li>BF Gain (0.1..20): Adjust manualy BF gain</li>
-	<li>Output picture horizontal resolution : small resolution for narrow band</li>
-	<li>Output picture vertical resolution </li>
-	<li>Line repetition : if spectrum is too short in time, adjust that</li>
-	<li>CALLSIGN </li>
-</ul>
-<p>You can copy/paste these fields</p>
-<p>Basic setup</p>
-<p>rtmp://192.168.2.1:7373/,437,SPECTRUM,0,32,32,32,10,</p>
-<p>,F5OEO,</p>
-</section>
-
-<hr>
 <section id="phone">
 <a class="anchor" href="#top">Back to top</a>
 <h3>Phone</h3>
@@ -245,9 +167,10 @@
 	<p id="test"><strong>Windows</strong></p>
 	<p>Common way is to use Minitioune software with Minitiouner hardware : see <a href="http://www.vivadatv.org">Vivadatv</a></p>
 	<p><img src="img/receicemt.JPG" alt="mt" /></p>
+	<p>PlutoDVB allows you to directly control the channel changes of your minitiouner.</p>
 	<p id="test"><strong>Windows/Linux with SDR</strong></p>
 	<p>A datv plugin of  <a href="https://github.com/f4exb/sdrangel">SdrAngel</a> based on <a href="http://www.pabr.org/radio/leandvb/leandvb.en.html">Leandvb</a> is able to receive DATV. It usually requires a high SNR but will be surely improved.</p>
-	<p><img src="img/sdrangeldvbs2.png" alt="mt" /></p>
+
 </section>
 <hr>	
 <section id="firmware">
@@ -417,15 +340,18 @@
 <h3>Help and Support</h3>
 <p id="test"><strong>Support</strong></p>
 <p>If you have any questions regarding this custom firmware or are experiencing any problems following the user guides, or experiments feel free to ask a question. Questions can be asked on our <a href="http://vivadatv.org/viewforum.php?f=87&sid=265a090b48bb7bace20b4dbbb2b9f034">vivadatv forum</a>. </p>
-<p id="test"><strong>Support the author</strong></p>
+<p id="test"><strong>Support the author F5OEO</strong></p>
 <p>Even most of this development is done under opensource (GPL), I should apreciate donation for integration, development and materials :  <a href="https://www.paypal.me/f5oeo">Donate</a></p>
+<p id="test"><strong>Support the contributor F5UII</strong></p>
+<p>I spend many hours on the evolutions of the interfaces and communication features of PlutoDVB.
+If you enjoy them, and the price of a coffee doesn't ruin you, I'll be happy to drink one to your good health: <a href='https://www.buymeacoffee.com/f5uii/'>Support, Buy me a coffee</a></p>
 </section>
 <hr>
 <section id="social">
 <h3 id="about">About</h3>
 <div class="colLeft">
 <p id="test"><strong>Author</strong></p>	
-<p>Hamradio call F5OEO since 1995, electronic and computer science engineer. Interested in experimenting rather than communicating. Main interests : SDR, embedded platform (raspebrry pi), digital television (DVB). </p>
+<p>Hamradio call <b>F5OEO</b> since 1995, electronic and computer science engineer. Interested in experimenting rather than communicating. Main interests : SDR, embedded platform (raspebrry pi), digital television (DVB). </p>
 <p id="test"><strong>Main projects</strong></p>
 <ul style="margin-left:8em; margin-top:0em;">
 		<li><a href="https://github.com/F5OEO/rpidatv">rpidatv : Standalone DVBS2 raspberry pi modulator</a></li>
@@ -435,16 +361,40 @@
 		
 	</ul>
 <p></p>
+<p id="test"><strong>Contributor</strong></p>  
+<p>Hamradio call <b>F5UII</b> since 1993, computer science engineer. Likes many aspects of the hobby and is a member of the <a href="http://www.fy5ke.org/?page_id=795" target="_blank">FY5KE contest</a> team. Discovered a lot of new domains thanks to the QO-100 satellite : Hyperfrequency, SDR, digital television (DVB). </p><p>I contribute to PlutoDVB mainly on the man-machine interface (representation standardization, logo, multiple modulation tabs, exchange files), on the communication with third party tools (Minitiouner, OBS Studio, IoT,...). </p>
+
+<p>
+  <p id="test"><strong>Main projects</strong></p>
+<ul style="margin-left:8em; margin-top:0em;">
+    <li><a href="https://www.phase4a.eu">phase4a.eu : DATV online monitoring</a></li>
+    <li><a href="https://www.f5uii.net/en/patch-plutodvb/">Patches for PlutoDVB</a></li>
+    <li><a href="https://www.f5uii.net">Blog f5uii.net : With many tutorials (SDR, MMDVM DMR) </a></li>
+  </ul>
 </div>
 </section>
 <footer>
-<p>&copy; 2019 F5OEO, Evariste</p>
+<p>&copy; 2019-2021 F5OEO, Evariste</p>
 </footer>
 <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
 <script>window.jQuery || document.write('<script src="js/vendor/jquery-3.1.1.min.js"><\/script>')</script>
-<script src="./img/version.js"></script>
+<!-- <script src="./img/version.js"></script>-->
 <script type="text/javascript">
 	$('#releasenote').load('releasenote.php');
+</script>
+<script type="text/javascript">
+    var ip = location.host;
+    console.log("ip"+ip+".");
+    if (ip=="") {
+    	document.getElementById("banner2").style.display = 'none';
+    	document.getElementById("banner1").style.display = 'block';
+    } else {
+    	document.getElementById("link").setAttribute('href', "http://"+ip+"/setup.php");
+
+    	document.getElementById("banner1").style.display = 'none';
+    	document.getElementById("banner2").style.display = 'block';
+
+    }
 </script>
 </body>
 </html>
