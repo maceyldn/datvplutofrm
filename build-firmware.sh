@@ -17,34 +17,26 @@ fi
 
 sudo apt-get install -y git build-essential fakeroot libncurses5-dev libssl-dev ccache
 sudo apt-get install -y dfu-util u-boot-tools device-tree-compiler libssl1.0-dev mtools
-sudo apt-get install -y bc python cpio zip unzip rsync file wget
+sudo apt-get install -y bc python cpio zip unzip rsync file wget flex bison
 
 cd ..
 git clone --recurse-submodules https://github.com/analogdevicesinc/plutosdr-fw.git
-cd plutosdr-fw
-make clean
-cd ..
+#cd plutosdr-fw
+#make clean
+cd datvplutofrm
 
-echo "Build SRT"
-rm -rf srt
-git clone https://github.com/Haivision/srt.git
-cd srt
-if [[ ! -d cmake-build ]]
-then
-	    mkdir cmake-build
-fi
+#Upgrade FFMPEG
+rm -rf ../plutosdr-fw/buildroot/packages/ffmpeg
+cp -r packages/ffmpeg ../plutosdr-fw/buildroot/packages
 
-cd cmake-build
-cmake -DENABLE_ENCRYPTION=OFF -DCMAKE_TOOLCHAIN_FILE=../../datvplutofrm/CmakeArmToolchain.cmake ..
-make -j 8
-cp srt-live-transmit ../../datvplutofrm/board/pluto/overlay/usr/bin/
-cd ../../datvplutofrm
 
 echo "Copy config in place"
 cp configs/f5oeo_zynq_pluto_defconfig ../plutosdr-fw/buildroot/configs/f5oeo_zynq_pluto_defconfig
 
 echo "Copy old Make to temp"
 mv ../plutosdr-fw/Makefile ../plutosdr-fw/Makefile.orig
+##Copy it in
+
 
 echo "Copy new Makefile in place"
 cp plutosdr_fw_patch/Makefile ../plutosdr-fw/Makefile

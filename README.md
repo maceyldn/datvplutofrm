@@ -1,4 +1,4 @@
 # datvplutofrm
-Digital Television custom firmware for PlutoSDR
+QO100 Custom firmware for PlutoSDR - DVB & DVB-MPE
 # Feedbacks and discussions
-https://groups.io/g/plutodvb
+M0MUX - Original work by F5OEO & F5UII
