@@ -20,4 +20,22 @@ RUN apt-get install -y bc python cpio zip unzip rsync file wget
 
 RUN git clone --recurse-submodules https://github.com/analogdevicesinc/plutosdr-fw.git
 
+
+
+#Upgrade FFMPEG
+#RUN rm -rf /plutosdr-fw/buildroot/packages/ffmpeg
+
+WORKDIR datvplutofrm
+
+#RUN cp -r /datvplutofrm/package/ffmpeg /plutosdr-fw/buildroot/packages
+RUN cp /datvplutofrm/configs/f5oeo_zynq_pluto_defconfig /plutosdr-fw/buildroot/configs/f5oeo_zynq_pluto_defconfig
+
+RUN mv /datvplutofrm/plutosdr_fw_patch/Makefile /plutosdr-fw/Makefile.orig
+#Upgrade FFMPEG
+#RUN rm -rf /plutosdr-fw/buildroot/packages/ffmpeg
+
+WORKDIR /plutosdr-fw
+RUN make -j 4
+
+
 #RUN ./config-firmware.sh
